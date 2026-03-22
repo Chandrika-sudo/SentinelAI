@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SentinelAI — Real-time Safety Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <!-- Scan-line overlay -->
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <div class="app">
+
+    <!-- ── Sidebar ─────────────────────────────────────────────── -->
+    <aside class="sidebar">
+      <div class="brand">
+        <svg class="brand-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 2L4 8v8c0 7.18 5.16 13.9 12 15.93C23.84 29.9 29 23.18 29 16V8L16 2z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+          <circle cx="16" cy="15" r="4" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="16" y1="8" x2="16" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="16" y1="19" x2="16" y2="22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="9" y1="15" x2="12" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="20" y1="15" x2="23" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <span class="brand-name">SentinelAI</span>
+      </div>
+
+      <nav class="nav">
+        <a class="nav-item active" href="#" title="Dashboard">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 4a2 2 0 012-2h4a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2V4zM10 4a2 2 0 012-2h4a2 2 0 012 2v4a2 2 0 01-2 2h-4a2 2 0 01-2-2V4zM2 12a2 2 0 012-2h4a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4zM10 12a2 2 0 012-2h4a2 2 0 012 2v4a2 2 0 01-2 2h-4a2 2 0 01-2-2v-4z"/></svg>
+          <span>Live Feed</span>
+        </a>
+        <a class="nav-item" href="#alerts-section" title="Alerts">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/></svg>
+          <span>Alerts</span>
+          <span class="nav-badge" id="nav-badge" style="display:none">0</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sys-clock" id="sys-clock">00:00:00</div>
+        <div class="sys-dot"></div>
+        <span class="sys-label">LIVE</span>
+      </div>
+    </aside>
+
+    <!-- ── Main ────────────────────────────────────────────────── -->
+    <main class="main">
+
+      <!-- Top bar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1 class="page-title">Live Monitoring</h1>
+          <span class="page-sub" id="active-label">— cameras online</span>
+        </div>
+        <div class="topbar-right">
+          <div class="metric-pill">
+            <span class="metric-pill-label">People</span>
+            <span class="metric-pill-val" id="stat-people">0</span>
+          </div>
+          <div class="metric-pill warn" id="pill-falls">
+            <span class="metric-pill-label">Falls</span>
+            <span class="metric-pill-val" id="stat-falls">0</span>
+          </div>
+          <div class="metric-pill danger" id="pill-theft">
+            <span class="metric-pill-label">Theft</span>
+            <span class="metric-pill-val" id="stat-theft">0</span>
+          </div>
+          <div class="metric-pill fire" id="pill-fire">
+            <span class="metric-pill-label">Fire</span>
+            <span class="metric-pill-val" id="stat-fire">0</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Camera grid -->
+      <section class="camera-grid" id="camera-grid">
+
+        <div class="cam-card" id="cam-1">
+          <div class="cam-top">
+            <div class="cam-id">
+              <span class="cam-dot offline" id="dot-1"></span>
+              <span class="cam-mono">CAM_01</span>
+            </div>
+            <div class="cam-actions">
+              <span class="cam-status" id="status-1">OFFLINE</span>
+              <button class="btn-icon" id="btn-menu-1" onclick="toggleMenu(1)" title="Options">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z"/></svg>
+              </button>
+              <div class="cam-menu" id="menu-1">
+                <label class="menu-item">
+                  <svg viewBox="0 0 20 20" fill="currentColor"><path d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"/></svg>
+                  Upload Video
+                  <input type="file" accept="video/*" onchange="uploadVideo(event,1)" hidden>
+                </label>
+                <div class="menu-item" onclick="openIPModal(1)">
+                  <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M17.778 8.222c-4.296-4.296-11.26-4.296-15.556 0A1 1 0 01.808 6.808c5.076-5.077 13.308-5.077 18.384 0a1 1 0 01-1.414 1.414zM14.95 11.05a7 7 0 00-9.9 0 1 1 0 01-1.414-1.414 9 9 0 0112.728 0 1 1 0 01-1.414 1.414zM12.12 13.88a3 3 0 00-4.242 0 1 1 0 01-1.415-1.415 5 5 0 017.072 0 1 1 0 01-1.415 1.415zM9 16a1 1 0 112 0 1 1 0 01-2 0z" clip-rule="evenodd"/></svg>
+                  IP Camera
+                </div>
+                <div class="menu-item menu-item-danger" onclick="closeCamera(1)">
+                  <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clip-rule="evenodd"/></svg>
+                  Disconnect
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="cam-viewport">
+            <img class="cam-img" id="feed-1" src="" alt="Camera 1">
+            <div class="cam-offline-msg" id="offline-1">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M15.536 8.464a5 5 0 010 7.072M12 12h.01M8.464 15.536a5 5 0 010-7.072M4.929 19.071a10 10 0 010-14.142M19.071 4.929a10 10 0 010 14.142"/></svg>
+              <p>No signal</p>
+            </div>
+            <div class="cam-overlay" id="overlay-1">
+              <span class="cam-count" id="count-1">0 persons</span>
+              <span class="cam-alert hidden" id="alert-1">FALL</span>
+              <span class="cam-alert theft-alert hidden" id="theft-1">THEFT</span>
+              <span class="cam-alert fire-alert hidden" id="fire-1">FIRE</span>
+            </div>
+            <button class="reset-btn hidden" id="reset-1" onclick="resetAlert(1)" title="Dismiss alert">✕ Dismiss</button>
+          </div>
+        </div>
+
+        <div class="cam-card" id="cam-2">
+          <div class="cam-top">
+            <div class="cam-id">
+              <span class="cam-dot offline" id="dot-2"></span>
+              <span class="cam-mono">CAM_02</span>
+            </div>
+            <div class="cam-actions">
+              <span class="cam-status" id="status-2">OFFLINE</span>
+              <button class="btn-icon" id="btn-menu-2" onclick="toggleMenu(2)" title="Options">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z"/></svg>
+              </button>
+              <div class="cam-menu" id="menu-2">
+                <label class="menu-item">
+                  <svg viewBox="0 0 20 20" fill="currentColor"><path d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"/></svg>
+                  Upload Video
+                  <input type="file" accept="video/*" onchange="uploadVideo(event,2)" hidden>
+                </label>
+                <div class="menu-item" onclick="openIPModal(2)">
+                  <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M17.778 8.222c-4.296-4.296-11.26-4.296-15.556 0A1 1 0 01.808 6.808c5.076-5.077 13.308-5.077 18.384 0a1 1 0 01-1.414 1.414zM14.95 11.05a7 7 0 00-9.9 0 1 1 0 01-1.414-1.414 9 9 0 0112.728 0 1 1 0 01-1.414 1.414zM12.12 13.88a3 3 0 00-4.242 0 1 1 0 01-1.415-1.415 5 5 0 017.072 0 1 1 0 01-1.415 1.415zM9 16a1 1 0 112 0 1 1 0 01-2 0z" clip-rule="evenodd"/></svg>
+                  IP Camera
+                </div>
+                <div class="menu-item menu-item-danger" onclick="closeCamera(2)">
+                  <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clip-rule="evenodd"/></svg>
+                  Disconnect
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="cam-viewport">
+            <img class="cam-img" id="feed-2" src="" alt="Camera 2">
+            <div class="cam-offline-msg" id="offline-2">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M15.536 8.464a5 5 0 010 7.072M12 12h.01M8.464 15.536a5 5 0 010-7.072M4.929 19.071a10 10 0 010-14.142M19.071 4.929a10 10 0 010 14.142"/></svg>
+              <p>No signal</p>
+            </div>
+            <div class="cam-overlay" id="overlay-2">
+              <span class="cam-count" id="count-2">0 persons</span>
+              <span class="cam-alert hidden" id="alert-2">FALL</span>
+              <span class="cam-alert theft-alert hidden" id="theft-2">THEFT</span>
+              <span class="cam-alert fire-alert hidden" id="fire-2">FIRE</span>
+            </div>
+            <button class="reset-btn hidden" id="reset-2" onclick="resetAlert(2)" title="Dismiss alert">✕ Dismiss</button>
+          </div>
+        </div>
+
+        <div class="cam-card" id="cam-3">
+          <div class="cam-top">
+            <div class="cam-id">
+              <span class="cam-dot offline" id="dot-3"></span>
+              <span class="cam-mono">CAM_03</span>
+            </div>
+            <div class="cam-actions">
+              <span class="cam-status" id="status-3">OFFLINE</span>
+              <button class="btn-icon" id="btn-menu-3" onclick="toggleMenu(3)" title="Options">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z"/></svg>
+              </button>
+              <div class="cam-menu" id="menu-3">
+                <label class="menu-item">
+                  <svg viewBox="0 0 20 20" fill="currentColor"><path d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"/></svg>
+                  Upload Video
+                  <input type="file" accept="video/*" onchange="uploadVideo(event,3)" hidden>
+                </label>
+                <div class="menu-item" onclick="openIPModal(3)">
+                  <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M17.778 8.222c-4.296-4.296-11.26-4.296-15.556 0A1 1 0 01.808 6.808c5.076-5.077 13.308-5.077 18.384 0a1 1 0 01-1.414 1.414zM14.95 11.05a7 7 0 00-9.9 0 1 1 0 01-1.414-1.414 9 9 0 0112.728 0 1 1 0 01-1.414 1.414zM12.12 13.88a3 3 0 00-4.242 0 1 1 0 01-1.415-1.415 5 5 0 017.072 0 1 1 0 01-1.415 1.415zM9 16a1 1 0 112 0 1 1 0 01-2 0z" clip-rule="evenodd"/></svg>
+                  IP Camera
+                </div>
+                <div class="menu-item menu-item-danger" onclick="closeCamera(3)">
+                  <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clip-rule="evenodd"/></svg>
+                  Disconnect
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="cam-viewport">
+            <img class="cam-img" id="feed-3" src="" alt="Camera 3">
+            <div class="cam-offline-msg" id="offline-3">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M15.536 8.464a5 5 0 010 7.072M12 12h.01M8.464 15.536a5 5 0 010-7.072M4.929 19.071a10 10 0 010-14.142M19.071 4.929a10 10 0 010 14.142"/></svg>
+              <p>No signal</p>
+            </div>
+            <div class="cam-overlay" id="overlay-3">
+              <span class="cam-count" id="count-3">0 persons</span>
+              <span class="cam-alert hidden" id="alert-3">FALL</span>
+              <span class="cam-alert theft-alert hidden" id="theft-3">THEFT</span>
+              <span class="cam-alert fire-alert hidden" id="fire-3">FIRE</span>
+            </div>
+            <button class="reset-btn hidden" id="reset-3" onclick="resetAlert(3)" title="Dismiss alert">✕ Dismiss</button>
+          </div>
+        </div>
+
+        <div class="cam-card" id="cam-4">
+          <div class="cam-top">
+            <div class="cam-id">
+              <span class="cam-dot offline" id="dot-4"></span>
+              <span class="cam-mono">CAM_04</span>
+            </div>
+            <div class="cam-actions">
+              <span class="cam-status" id="status-4">OFFLINE</span>
+              <button class="btn-icon" id="btn-menu-4" onclick="toggleMenu(4)" title="Options">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z"/></svg>
+              </button>
+              <div class="cam-menu" id="menu-4">
+                <label class="menu-item">
+                  <svg viewBox="0 0 20 20" fill="currentColor"><path d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"/></svg>
+                  Upload Video
+                  <input type="file" accept="video/*" onchange="uploadVideo(event,4)" hidden>
+                </label>
+                <div class="menu-item" onclick="openIPModal(4)">
+                  <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M17.778 8.222c-4.296-4.296-11.26-4.296-15.556 0A1 1 0 01.808 6.808c5.076-5.077 13.308-5.077 18.384 0a1 1 0 01-1.414 1.414zM14.95 11.05a7 7 0 00-9.9 0 1 1 0 01-1.414-1.414 9 9 0 0112.728 0 1 1 0 01-1.414 1.414zM12.12 13.88a3 3 0 00-4.242 0 1 1 0 01-1.415-1.415 5 5 0 017.072 0 1 1 0 01-1.415 1.415zM9 16a1 1 0 112 0 1 1 0 01-2 0z" clip-rule="evenodd"/></svg>
+                  IP Camera
+                </div>
+                <div class="menu-item menu-item-danger" onclick="closeCamera(4)">
+                  <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clip-rule="evenodd"/></svg>
+                  Disconnect
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="cam-viewport">
+            <img class="cam-img" id="feed-4" src="" alt="Camera 4">
+            <div class="cam-offline-msg" id="offline-4">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M15.536 8.464a5 5 0 010 7.072M12 12h.01M8.464 15.536a5 5 0 010-7.072M4.929 19.071a10 10 0 010-14.142M19.071 4.929a10 10 0 010 14.142"/></svg>
+              <p>No signal</p>
+            </div>
+            <div class="cam-overlay" id="overlay-4">
+              <span class="cam-count" id="count-4">0 persons</span>
+              <span class="cam-alert hidden" id="alert-4">FALL</span>
+              <span class="cam-alert theft-alert hidden" id="theft-4">THEFT</span>
+              <span class="cam-alert fire-alert hidden" id="fire-4">FIRE</span>
+            </div>
+            <button class="reset-btn hidden" id="reset-4" onclick="resetAlert(4)" title="Dismiss alert">✕ Dismiss</button>
+          </div>
+        </div>
+
+      </section><!-- /camera-grid -->
+
+      <!-- Alerts -->
+      <section class="alerts-section" id="alerts-section">
+        <div class="alerts-header">
+          <div class="alerts-title">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/></svg>
+            Event Log
+          </div>
+          <button class="btn-clear" onclick="clearAlerts()">Clear log</button>
+        </div>
+        <div class="alerts-log" id="alerts-log">
+          <div class="log-entry log-info">
+            <span class="log-time" id="init-time">—</span>
+            <span class="log-tag info">INFO</span>
+            <span class="log-msg">System initialized. Awaiting camera input.</span>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- IP Camera Modal -->
+  <div class="modal-backdrop hidden" id="modal-backdrop" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <span class="modal-title">Connect IP Camera</span>
+        <button class="btn-icon" onclick="closeModal()">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <label class="field-label">Camera</label>
+        <select class="field-input" id="modal-cam-id">
+          <option value="1">CAM_01</option>
+          <option value="2">CAM_02</option>
+          <option value="3">CAM_03</option>
+          <option value="4">CAM_04</option>
+        </select>
+        <label class="field-label" style="margin-top:16px">Stream URL / IP Address</label>
+        <input class="field-input" id="modal-ip" type="text"
+               placeholder="rtsp://192.168.1.100:554/stream"
+               onkeydown="if(event.key==='Enter') connectCamera()">
+        <div class="field-error" id="modal-ip-error"></div>
+        <p class="field-hint">Accepts RTSP streams, HTTP MJPEG, or a plain IP address.</p>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn-primary" onclick="connectCamera()">Connect</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
