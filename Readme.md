@@ -7,7 +7,6 @@
 ![Flask](https://img.shields.io/badge/Flask-3.0-black?logo=flask)
 ![YOLOv8](https://img.shields.io/badge/YOLOv8-ultralytics-orange)
 ![OpenCV](https://img.shields.io/badge/OpenCV-4.10-green?logo=opencv)
-![License](https://img.shields.io/badge/license-MIT-brightgreen)
 
 ---
 
