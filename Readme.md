@@ -23,12 +23,6 @@
 
 ---
 
-## Screenshots
-
-> Upload an MP4 to any camera slot and see bounding boxes, ownership arrows, alert banners and the event log update in real time.
-
----
-
 ## Tech Stack
 
 | Layer | Technology |
