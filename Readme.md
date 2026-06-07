@@ -202,6 +202,3 @@ Set `HOST`, `PORT`, `DEBUG=false`, and `UPLOAD_FOLDER` in the platform's environ
 
 ---
 
-## License
-
-MIT © 2024 Your Name — feel free to fork and build on this.
